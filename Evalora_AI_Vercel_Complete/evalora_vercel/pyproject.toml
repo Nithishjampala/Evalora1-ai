@@ -1,2 +1,23 @@
+[project]
+name = "evalora-ai"
+version = "1.0.0"
+requires-python = ">=3.12,<3.14"
+
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "google-genai",
+    "google-api-python-client",
+    "google-auth",
+    "pandas",
+    "openpyxl",
+    "PyMuPDF",
+    "python-docx",
+    "python-pptx",
+    "python-multipart",
+    "pydantic",
+    "vercel"
+]
+
 [tool.vercel]
 entrypoint = "api.index:app"
