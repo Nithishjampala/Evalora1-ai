@@ -1,0 +1,16 @@
+{
+  "version": 2,
+  "functions": {
+    "api/index.py": {
+      "maxDuration": 300
+    },
+    "api/upload.js": {
+      "maxDuration": 60
+    }
+  },
+  "routes": [
+    { "src": "/api/upload", "dest": "/api/upload.js" },
+    { "src": "/api/(.*)", "dest": "/api/index.py" },
+    { "src": "/(.*)", "dest": "/public/$1" }
+  ]
+}
