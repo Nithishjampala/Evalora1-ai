@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#102a43">
+  <title>Evalora AI | Project Evaluation</title>
+  <style>
+    :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#142536;background:#f3f6fa;font-synthesis:none;text-rendering:optimizeLegibility}
+    *{box-sizing:border-box}body{margin:0}.hero{background:linear-gradient(120deg,#102a43,#243b53 60%,#334e68);color:#fff;padding:34px max(22px,calc((100vw - 1080px)/2)) 38px}.hero h1{margin:0 0 8px;font-size:34px;letter-spacing:-.6px}.hero p{margin:0;color:#d9e5ef}.wrap{max-width:1080px;margin:26px auto;padding:0 18px}.card{background:#fff;border:1px solid #e1e8ef;border-radius:16px;padding:24px;margin-bottom:18px;box-shadow:0 5px 20px #19324a08}.card h2{margin:0 0 8px;font-size:21px}.muted{color:#637487;font-size:14px;line-height:1.55}.pill{display:inline-block;background:#e7f3ff;color:#145b8e;border-radius:30px;padding:5px 10px;font-size:12px;font-weight:750;letter-spacing:.3px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:18px 0}.field{display:flex;flex-direction:column;gap:7px;min-width:0}.field label{font-weight:650;font-size:14px}.field input{border:1px solid #cbd5df;padding:11px;border-radius:9px;width:100%;background:#fff}.field input:focus{outline:2px solid #b7d8f4;border-color:#4387bd}.hint{font-size:12px;color:#718196}.btn{border:0;background:#1264a3;color:#fff;padding:13px 20px;border-radius:10px;font-weight:750;cursor:pointer}.btn:disabled{opacity:.55;cursor:wait}.status{white-space:pre-wrap;background:#f5f8fb;border:1px solid #e4ebf2;padding:16px;border-radius:10px;margin-top:16px;display:none;font-size:14px;line-height:1.55;overflow-wrap:anywhere}.link{color:#1264a3;font-weight:700}.bar{height:8px;background:#e5edf4;border-radius:20px;overflow:hidden;margin-top:9px}.bar>span{height:100%;width:0;display:block;background:#2381bd;transition:width .2s}.phase{padding:10px 12px;background:#f7f9fc;border:1px solid #e7edf3;border-radius:9px;font-size:13px}.phase strong{display:block;margin-bottom:4px}.note{padding:12px 14px;border-left:3px solid #e2a63b;background:#fff9ed;color:#6d5527;border-radius:6px;font-size:13px;line-height:1.5}.sheet{display:flex;align-items:center;gap:10px;flex-wrap:wrap}.sheet a{overflow-wrap:anywhere}@media(max-width:700px){.grid{grid-template-columns:1fr}.hero h1{font-size:28px}.card{padding:18px}}
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <h1>Evalora AI</h1>
+    <p>Evidence-based student project evaluation · Four phases · Automatic Google Sheets reporting</p>
+  </header>
+  <nav class="tabbar" aria-label="Evalora modules">
+    <button class="tabbtn active" type="button" data-tab="projectTab">Project Evaluation</button>
+    <button class="tabbtn" type="button" data-tab="videoTab">Video Analyzer</button>
+  </nav>
+  <main class="wrap">
+    <div id="projectTab" class="tabpanel">
+    <section class="card">
+      <span class="pill">PROJECT EVALUATION</span>
+      <h2 style="margin-top:12px">Upload evaluation files</h2>
+      <p class="muted">Choose the four phase guidelines and the student Excel workbook. Files are sent directly to the Vercel Function. To stay within Vercel request limits, all five files together must be 4 MB or smaller. Student document links in Excel must be Google Drive links accessible to your service account.</p>
+      <form id="form">
+        <div class="grid">
+          <div class="field"><label for="ideation">Ideation guideline</label><input id="ideation" type="file" required accept=".pdf,.docx,.pptx,.txt,.md,.csv"><span class="hint">PDF, DOCX, PPTX, TXT, MD or CSV</span></div>
+          <div class="field"><label for="design">Design guideline</label><input id="design" type="file" required accept=".pdf,.docx,.pptx,.txt,.md,.csv"><span class="hint">PDF, DOCX, PPTX, TXT, MD or CSV</span></div>
+          <div class="field"><label for="build">Build guideline</label><input id="build" type="file" required accept=".pdf,.docx,.pptx,.txt,.md,.csv"><span class="hint">PDF, DOCX, PPTX, TXT, MD or CSV</span></div>
+          <div class="field"><label for="demo">Demo guideline</label><input id="demo" type="file" required accept=".pdf,.docx,.pptx,.txt,.md,.csv"><span class="hint">PDF, DOCX, PPTX, TXT, MD or CSV</span></div>
+          <div class="field" style="grid-column:1/-1"><label for="excel">Student Excel workbook</label><input id="excel" type="file" required accept=".xlsx"><span class="hint">.xlsx only. Include Student Name, optional Project ID/Project Name, and phase-specific Google Drive link columns.</span></div>
+        </div>
+        <div class="phase"><strong>Evaluation stages</strong>Ideation → Design → Build → Demo. Empty phase links in the student workbook are skipped. Each completed phase is appended as a separate row in Google Sheets.</div>
+        <div id="progressWrap" style="display:none;margin-top:16px"><div id="progressText" class="muted">Preparing uploads…</div><div class="bar"><span id="progressBar"></span></div></div>
+        <p style="margin:18px 0 0"><button class="btn" id="submit" type="submit">Upload files & start evaluation</button></p>
+      </form>
+      <div class="status" id="status" role="status" aria-live="polite"></div>
+    </section>
+    <section class="card">
+      <h2>Google Sheets destination</h2>
+      <p class="muted">Completed evaluations are appended to the <b>Evaluation History</b> tab. Existing records are retained. The tab contains the requested 11 columns.</p>
+      <div class="sheet"><a class="link" href="https://docs.google.com/spreadsheets/d/1L8FuY_CFURGrRkWbEFAG_QsHTyF0oUJYfpCfNAl-sOw/edit" target="_blank" rel="noopener">Open Evalora AI Google Sheet ↗</a></div>
+    </section>
+    <section class="card">
+      <h2>Before first use</h2>
+      <p class="muted">Configure Gemini and Google service-account credentials in Vercel Environment Variables. No Vercel Blob store or Blob token is required in this version.</p>
+      <div class="note">Vercel Functions have a request-body limit. Keep all five project-evaluation files together under 4 MB. Uploaded video files are limited to 3 MB; for larger videos, use a supported public video URL.</div>
+    </section>
+    </div>
+    <div id="videoTab" class="tabpanel" hidden>
+      <section class="card">
+        <span class="pill">VIDEO ANALYZER</span>
+        <h2 style="margin-top:12px">AI Video Summarizer & Communication Coach</h2>
+        <p class="muted">Upload a presentation, interview, speech or technical explanation video, or provide a public YouTube, Vimeo or Dailymotion link. Gemini analyzes the visual content and available speech.</p>
+        <div class="grid">
+          <div class="field" style="grid-column:1/-1"><label for="videoFile">Upload video (optional)</label><input id="videoFile" type="file" accept="video/mp4,video/quicktime,video/webm,video/mpeg,video/x-msvideo,video/x-ms-wmv,video/3gpp,video/x-matroska"><span class="hint">MP4, MOV, WEBM, MPEG, AVI, WMV, 3GPP or MKV · Maximum 3 MB</span></div>
+          <div class="field" style="grid-column:1/-1"><label for="videoUrl">Or public video URL</label><input id="videoUrl" type="url" placeholder="https://www.youtube.com/watch?v=..."><span class="hint">Public YouTube, Vimeo and Dailymotion links. Private, restricted or DRM-protected videos are not supported.</span></div>
+          <div class="field"><label for="videoLanguage">Report language</label><select id="videoLanguage"><option>English</option><option>Telugu</option><option>Telugu explanations with English corrections</option></select></div>
+          <div class="field"><label for="videoPurpose">Video purpose</label><select id="videoPurpose"><option>Project presentation</option><option>English speaking practice</option><option>Technical explanation</option><option>Interview practice</option><option>General speech or lecture</option></select></div>
+        </div>
+        <div id="videoProgressWrap" style="display:none;margin-top:12px"><div id="videoProgressText" class="muted">Preparing video…</div><div class="bar"><span id="videoProgressBar"></span></div></div>
+        <button class="btn" id="analyzeVideo" type="button">Analyze Video</button>
+        <div class="status" id="videoStatus" role="status" aria-live="polite"></div>
+      </section>
+      <section class="card">
+        <h2>Analysis report</h2>
+        <div id="videoReport" class="muted" style="white-space:pre-wrap;overflow-wrap:anywhere">Your video analysis report will appear here.</div>
+      </section>
+      <section class="card"><div class="note">Communication scores are AI-generated practice estimates, not certified assessments. Transcript quality depends on clear audio. Video analysis depends on your configured Gemini model supporting video input, available API quota, and Vercel's execution-time limits.</div></section>
+    </div>
+  </main>
+  <script type="module">
+    const form = document.getElementById('form');
+    const statusBox = document.getElementById('status');
+    const button = document.getElementById('submit');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressText = document.getElementById('progressText');
+    const progressBar = document.getElementById('progressBar');
+
+    function showStatus(message) {
+      statusBox.style.display = 'block';
+      statusBox.textContent = message;
+    }
+
+    async function parseResponse(response) {
+      const raw = await response.text();
+      let data;
+      try { data = raw ? JSON.parse(raw) : {}; }
+      catch (_) {
+        throw new Error(`Server returned HTTP ${response.status}, not JSON: ${raw.slice(0, 700)}`);
+      }
+      if (!response.ok) throw new Error(data.detail || data.error || `Request failed (HTTP ${response.status})`);
+      return data;
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      button.disabled = true;
+      progressWrap.style.display = 'block';
+      progressBar.style.width = '0%';
+      showStatus('Checking files and starting evaluation…');
+      try {
+        const fields = ['ideation', 'design', 'build', 'demo', 'excel'];
+        const formData = new FormData();
+        let totalBytes = 0;
+        for (let i = 0; i < fields.length; i++) {
+          const id = fields[i];
+          const file = document.getElementById(id).files[0];
+          if (!file) throw new Error(`Please select ${id} file.`);
+          totalBytes += file.size;
+          formData.append(id, file, file.name);
+          progressText.textContent = `Preparing ${id} (${i + 1}/5): ${file.name}`;
+          progressBar.style.width = `${((i + 1) / fields.length) * 25}%`;
+        }
+        if (totalBytes > 4 * 1024 * 1024) {
+          throw new Error('All five files together must be 4 MB or smaller. Compress PDFs or use smaller guideline files and Excel workbook.');
+        }
+        progressText.textContent = 'Uploading files to Evalora AI and evaluating student submissions…';
+        const response = await fetch('/api/evaluate', { method: 'POST', body: formData });
+        const result = await parseResponse(response);
+        let output = `${result.message}\nModel: ${result.model}\nEvaluations written: ${result.written}\n\n`;
+        for (const item of (result.details || [])) {
+          output += `${item.student} | ${item.phase} | ${item.status}`;
+          if (item.score !== undefined) output += ` | Score: ${item.score}`;
+          if (item.error) output += ` | ${item.error}`;
+          output += '\n';
+        }
+        if (result.errors?.length) output += `\nErrors:\n${result.errors.join('\n')}`;
+        output += `\n\nGoogle Sheet: ${result.sheet_url}`;
+        showStatus(output);
+        if (result.sheet_url) {
+          const link = document.createElement('a');
+          link.href = result.sheet_url; link.target = '_blank'; link.rel = 'noopener';
+          link.textContent = 'Open updated Google Sheet'; link.className = 'link';
+          statusBox.append(document.createElement('br'), link);
+        }
+        progressText.textContent = 'Evaluation request finished.';
+        progressBar.style.width = '100%';
+      } catch (error) {
+        showStatus(`Error: ${error.message}\n\nKeep the combined file size below 4 MB. For API errors, open Vercel → Functions → Logs.`);
+        progressText.textContent = 'Process stopped.';
+      } finally { button.disabled = false; }
+    });
+
+    // Switch between project evaluation and video analyzer.
+    document.querySelectorAll('.tabbtn').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tabbtn').forEach((item) => item.classList.toggle('active', item === tab));
+        document.querySelectorAll('.tabpanel').forEach((panel) => panel.hidden = panel.id !== tab.dataset.tab);
+      });
+    });
+
+    const videoButton = document.getElementById('analyzeVideo');
+    const videoFileInput = document.getElementById('videoFile');
+    const videoUrlInput = document.getElementById('videoUrl');
+    const videoStatus = document.getElementById('videoStatus');
+    const videoReport = document.getElementById('videoReport');
+    const videoProgressWrap = document.getElementById('videoProgressWrap');
+    const videoProgressText = document.getElementById('videoProgressText');
+    const videoProgressBar = document.getElementById('videoProgressBar');
+
+    videoButton.addEventListener('click', async () => {
+      const file = videoFileInput.files[0];
+      const url = videoUrlInput.value.trim();
+      if (Boolean(file) === Boolean(url)) {
+        videoStatus.style.display = 'block';
+        videoStatus.textContent = 'Choose either a video file or a public video URL, not both.';
+        return;
+      }
+      videoButton.disabled = true;
+      videoProgressWrap.style.display = 'block';
+      videoProgressBar.style.width = '0%';
+      videoStatus.style.display = 'block';
+      videoStatus.textContent = 'Preparing video analysis…';
+      videoReport.textContent = 'Gemini is analyzing your video. This may take a few minutes.';
+      try {
+        const formData = new FormData();
+        formData.append('language', document.getElementById('videoLanguage').value);
+        formData.append('purpose', document.getElementById('videoPurpose').value);
+        if (file) {
+          if (file.size > 3 * 1024 * 1024) throw new Error('Uploaded video must be 3 MB or smaller on this no-Blob deployment. For larger videos, use a supported public video URL.');
+          formData.append('video', file, file.name);
+        } else {
+          formData.append('video_url', url);
+        }
+        videoProgressText.textContent = file ? 'Uploading video to Evalora AI…' : 'Fetching public video URL…';
+        const response = await fetch('/api/video-analyze', { method: 'POST', body: formData });
+        const result = await parseResponse(response);
+        videoReport.textContent = result.report || 'No report returned.';
+        videoStatus.textContent = `Analysis completed using ${result.model}.`;
+        videoProgressText.textContent = 'Video analysis completed.';
+        videoProgressBar.style.width = '100%';
+      } catch (error) {
+        videoStatus.textContent = `Error: ${error.message}`;
+        videoReport.textContent = 'The video could not be analyzed. Check Vercel Function Logs, Gemini model video support, API quota and the video size.';
+        videoProgressText.textContent = 'Video analysis failed.';
+      } finally { videoButton.disabled = false; }
+    });;
+  </script>
+</body>
+</html>
