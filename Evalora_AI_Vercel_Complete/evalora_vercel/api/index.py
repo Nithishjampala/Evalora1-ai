@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Any, Optional
 
-import fitz
+import pymupdf
 import pandas as pd
 from docx import Document
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form
@@ -17,9 +17,12 @@ from google import genai
 from google.genai import types
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
-from pydantic import BaseModel, Field
-import yt_dlp
 from pptx import Presentation
+
+try:
+    import yt_dlp
+except ImportError:  # Keep the API and direct-video upload available if URL tooling is absent.
+    yt_dlp = None
 
 APP_NAME = "Evalora AI"
 MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite").strip()
@@ -171,7 +174,7 @@ def drive_file_id(url: str) -> str:
 def extract_text(filename: str, data: bytes) -> str:
     extension = filename.lower().rsplit(".", 1)[-1] if "." in filename else ""
     if extension == "pdf":
-        document = fitz.open(stream=data, filetype="pdf")
+        document = pymupdf.open(stream=data, filetype="pdf")
         return "\n".join(page.get_text() for page in document)
     if extension == "docx":
         document = Document(io.BytesIO(data))
@@ -318,6 +321,10 @@ def health():
         "app": APP_NAME,
         "model": MODEL,
         "sheet_id_configured": bool(SHEET_ID),
+        "gemini_key_configured": bool(os.getenv("GEMINI_API_KEY", "").strip()),
+        "google_service_account_configured": bool(os.getenv("GOOGLE_SERVICE_ACCOUNT_JSON", "").strip()),
+        "video_url_downloader_available": yt_dlp is not None,
+        "pdf_engine": getattr(pymupdf, "__version__", "loaded"),
         "upload_mode": "direct multipart (4 MB total request limit)",
     }
 
@@ -487,6 +494,8 @@ Respond in the selected report language. Use clear headings, tables, and practic
 
 
 def download_video_url(url: str, destination: str) -> str:
+    if yt_dlp is None:
+        raise RuntimeError("The yt-dlp package is not installed. Check that yt-dlp is listed in pyproject.toml and requirements.txt, then redeploy.")
     from urllib.parse import urlparse
     parsed = urlparse(url.strip())
     allowed_hosts = ("youtube.com", "www.youtube.com", "youtu.be", "m.youtube.com",
