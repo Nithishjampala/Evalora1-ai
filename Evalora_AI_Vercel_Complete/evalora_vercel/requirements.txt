@@ -9,4 +9,5 @@ PyMuPDF
 python-docx
 python-pptx
 python-multipart
-yt-dlp
+pydantic
+vercel
